@@ -1,7 +1,31 @@
+vTiles0     EQU $8000
+vTiles1     EQU $8800
+vTiles2     EQU $9000
+
+vBGMap0     EQU $9800
+vBGMap1     EQU $9C00
+
+; OAM address
+OAMRAM      EQU $FE00 ; $FE00 -> $FE9F
+
+; Input register
+rINP        EQU $FF00
+
+rLCDC       EQU $FF40
+
+rLY         EQU $FF44
+rBGP        EQU $FF47
+rOBP0       EQU $FF48
+rOBP1       EQU $FF49
+
+; Work RAM Bank 0: $C000-$CFFF
+WRAM        EQU $C000
+
+; variables
 varSum      EQU     $C000
 currentRow  EQU     $C001
 currentCol  EQU     $C002
-firstTile   EQU     $C003
+startAddress EQU     $C003
 
 MAX_ROWS    EQU     $12
 MAX_COLS    EQU     $14
@@ -24,19 +48,26 @@ Start:
     call turnOffLcd
     call setDefaultPalette
 
-    ld b, $00
-    call fillScreen
-
     ld hl, $8800
     ld de, BlackTileStart
     ld bc, BlackTileEnd - BlackTileStart
     call copyToMemory
 
+    ld b, $80
+    call fillScreen
+
+    call clearOam
+
     call turnOnLcd
 
-    call resetTilePosition
+.mainLoop:
+    call waitVBlank
 
-.countTile:
+    ;call resetTilePosition
+    
+    jr .mainLoop
+
+countTile:
     call checkTilePosition
 
     xor a
@@ -45,9 +76,9 @@ Start:
     call countNeighbors
 
     ld a, [varSum]
-    and [hl]
+    and e
 
-    ; if [hl] = 0 || count = 0, goto rule 2
+    ; if [de] = 0 || count = 0, goto rule 2
     jr z, .rule2
 
 ; else, goto rule 1
@@ -68,7 +99,7 @@ Start:
     jp goToNextTile
     
 ; check rule 2
-; if cell is dead and there is 3 neighbors, create live cell
+; if cell is hlad and there is 3 neighbors, create live cell
 ; if count = 0, goto 3
 .rule2:
     ld a, [varSum]
@@ -78,14 +109,14 @@ Start:
     jr nz, .rule3
     ; else, create live cell
     ld a, $01
-    ld [hl], a
+    ld [de], a
 
     jp goToNextTile
 
 ; check rule 3
 .rule3:
     xor a
-    ld [hl], a
+    ld [de], a
 
     ; check row
     ; check column
@@ -129,7 +160,7 @@ setDefaultPalette:
 
 copyToMemory:
     ld a, [de]
-    ld [hli], a ; ld [hl], a ; inc hl
+    ld [hli], a ; ld [de], a ; inc de
     inc de
     dec bc
     ld a, b
@@ -147,7 +178,18 @@ fillScreen:
     cp $9C ; screen ends at $9C00
     jr nz, .clear
     ret
-    
+
+clearOam:
+    ld hl, OAMRAM
+.clear
+    xor a
+    ld [hli], a
+    ld a, h
+    cp $FF ; OAMRAM ends at $FF00
+    jr nz, .clear
+    ret
+
+
 countNeighbors:
     xor a
     ld b, a
@@ -166,7 +208,7 @@ countNeighbors:
     ret
 
 
-; hl contains the address to the center tile
+; de contains the address to the center tile
 countTopLeft:
     ld a, $21
     ld c, a
@@ -203,7 +245,7 @@ countMiddleRight:
     ld a, $01
     ld c, a
 
-    call addHlBc
+    call addHlAndBcToDe
     call updateSumCounter
     ret
 
@@ -211,7 +253,7 @@ countBottomLeft:
     ld a, $19
     ld c, a
 
-    call addHlBc
+    call addHlAndBcToDe
     call updateSumCounter
     ret
 
@@ -219,7 +261,7 @@ countBottomCenter:
     ld a, $20
     ld c, a
 
-    call addHlBc
+    call addHlAndBcToDe
     call updateSumCounter
     ret
 
@@ -227,36 +269,36 @@ countBottomRight:
     ld a, $21
     ld c, a
 
-    call addHlBc
+    call addHlAndBcToDe
     call updateSumCounter
     ret
 
-addHlBc:
-    ld a, l
+addHlAndBcToDe:
+    ld a, e
     add c
-    ld e, a
+    ld l, a
 
-    ld a, h
+    ld a, d
     adc b
-    ld d, a
+    ld h, a
 
     ret
 
 subHlBc:
-    ld a, l
+    ld a, e
     sub c
-    ld e, a
+    ld l, a
 
-    ld a, h
+    ld a, d
     sbc b
-    ld d, a
+    ld h, a
 
     ret
 
 updateSumCounter:
     ; increment sum counter
-    ld a, [de]
-    add [varSum]
+    ld a, [varSum]
+    add [hl]
     ld [varSum], a
 
     ret
@@ -265,7 +307,7 @@ goToNextTile:
     ld a, [currentCol]
     inc a
     ld [currentCol], a
-    inc hl
+    inc de
 
     call checkTilePosition
 
@@ -284,7 +326,7 @@ checkTilePosition:
     ; check row
     cp MAX_ROWS
 
-    jr nz, goToNextLine
+    jr nz, .goToNextLine
 
     call resetTilePosition
 
@@ -293,12 +335,12 @@ checkTilePosition:
     xor a
     ld [currentCol], a
     ; change tile row
-    ld a, l
+    ld a, e
     add $0C
-    ld l, a
-    ld a, h
+    ld e, a
+    ld a, d
     adc $00
-    ld h, a
+    ld d, a
     
     ret
 
@@ -307,7 +349,7 @@ resetTilePosition:
     ld [currentRow], a
     ld [currentCol], a
 
-    ld hl, startAddress
+    ld de, startAddress
 
     ; TODO: verificar se eh aqui msm q eu qro fazer isso
     call waitVBlank
