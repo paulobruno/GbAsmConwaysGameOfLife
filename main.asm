@@ -269,7 +269,7 @@ countTopCenter:
     ret
 
 countTopRight:
-    ld a, $19
+    ld a, $1F
     ld c, a
 
     call subDeBcToHl
@@ -293,7 +293,7 @@ countMiddleRight:
     ret
 
 countBottomLeft:
-    ld a, $19
+    ld a, $1F
     ld c, a
 
     call addDeAndBcToHl
