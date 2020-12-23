@@ -28,8 +28,11 @@ WRAM        EQU $C000
 varSum      EQU     $C000
 currentRow  EQU     $C001
 currentCol  EQU     $C002
-currentCell EQU     $C003
-tilemapWram EQU     $C004
+vramCell0   EQU     $C003
+vramCell1   EQU     $C004
+wramCell0   EQU     $C005
+wramCell1   EQU     $C006
+tilemapWram EQU     $C007
 
 vramCell    EQU     $9821
 
@@ -74,26 +77,36 @@ Start:
     ld a, $38
     ld [rSCY], a
 
+mainLoop:
     call resetTilePosition
     call setStartingState
+
     call moveResultToVram
-
     call turnOnLcd
+    call waitVBlank
 
-mainLoop:
-    ;call waitVBlank
-    jp mainLoop
+    ld bc, $B0FF
+.delay
+    ld a, b
+    or c
+    dec bc
+    jr nz, .delay
+
+    call turnOffLcd
     
 countTile:
-    ;call checkTilePosition
-
     xor a
     ld [varSum], a
 
     call countNeighbors
 
+    ld a, [vramCell1]
+    ld h, a
+    ld a, [vramCell0]
+    ld l, a
+
     ld a, [varSum]
-    and e
+    and [hl]
 
     ; if [de] = 0 || count = 0, goto rule 2
     jr z, .rule2
@@ -104,13 +117,13 @@ countTile:
     ld a, [varSum]
     cp $02
 
-    jp z, goToNextTile
+    jp z, survive
 
 ; check rule 1 cell == 3
     ld a, [varSum]
     cp 03
 
-    jp z, goToNextTile
+    jp z, survive
     jr .rule3
 
 ; check rule 2
@@ -123,26 +136,25 @@ countTile:
     ; if count != 0, goto rule 3
     jr nz, .rule3
     ; else, create live cell
-    ld a, $01
-    ld [de], a
-
-    jp goToNextTile
+    jp survive
 
 ; check rule 3
 .rule3:
-    xor a
-    ld [de], a
+    ld a, [wramCell1]
+    ld h, a
+    ld a, [wramCell0]
+    ld l, a
+    ld [hl], $00
+    jp nextTilePosition
 
-    jp goToNextTile
-
-goToNextTile:
-    inc bc
-
-    call checkTilePosition
-
-    call turnOnLcd
-    jp mainLoop
-    
+survive:
+    ld a, [wramCell1]
+    ld h, a
+    ld a, [wramCell0]
+    ld l, a
+    ld [hl], $01
+    jp nextTilePosition
+        
 
 SECTION "Sprites", ROM0
 
@@ -218,8 +230,10 @@ clearOam:
 
 
 countNeighbors:
-    ;ld hl, bc
-    ;ld currentCell, hl
+    ld a, [vramCell1]
+    ld h, a
+    ld a, [vramCell0]
+    ld l, a
 
     xor a
     ld b, a
@@ -235,18 +249,14 @@ countNeighbors:
     call countBottomCenter
     call countBottomRight
 
-    ;ld hl, currentCell
-    ;ld bc, hl
-
     ret
-
 
 ; de contains the address to the center tile
 countTopLeft:
     ld a, $21
     ld c, a
 
-    call subHlBc
+    call subDeBcToHl
     call updateSumCounter
     ret
 
@@ -254,7 +264,7 @@ countTopCenter:
     ld a, $20
     ld c, a
 
-    call subHlBc
+    call subDeBcToHl
     call updateSumCounter
     ret
 
@@ -262,7 +272,7 @@ countTopRight:
     ld a, $19
     ld c, a
 
-    call subHlBc
+    call subDeBcToHl
     call updateSumCounter
     ret
 
@@ -270,7 +280,7 @@ countMiddleLeft:
     ld a, $01
     ld c, a
 
-    call subHlBc
+    call subDeBcToHl
     call updateSumCounter
     ret
 
@@ -278,7 +288,7 @@ countMiddleRight:
     ld a, $01
     ld c, a
 
-    call addHlAndBcToDe
+    call addDeAndBcToHl
     call updateSumCounter
     ret
 
@@ -286,7 +296,7 @@ countBottomLeft:
     ld a, $19
     ld c, a
 
-    call addHlAndBcToDe
+    call addDeAndBcToHl
     call updateSumCounter
     ret
 
@@ -294,7 +304,7 @@ countBottomCenter:
     ld a, $20
     ld c, a
 
-    call addHlAndBcToDe
+    call addDeAndBcToHl
     call updateSumCounter
     ret
 
@@ -302,28 +312,28 @@ countBottomRight:
     ld a, $21
     ld c, a
 
-    call addHlAndBcToDe
+    call addDeAndBcToHl
     call updateSumCounter
     ret
 
-addHlAndBcToDe:
-    ld a, e
+addDeAndBcToHl:
+    ld a, [vramCell0]
     add c
     ld l, a
 
-    ld a, d
-    adc b
+    ld a, [vramCell1]
+    adc $00
     ld h, a
 
     ret
 
-subHlBc:
-    ld a, e
+subDeBcToHl:
+    ld a, [vramCell0]
     sub c
     ld l, a
 
-    ld a, d
-    sbc b
+    ld a, [vramCell1]
+    sbc $00
     ld h, a
 
     ret
@@ -332,12 +342,27 @@ updateSumCounter:
     ; increment sum counter
     ld a, [varSum]
     add [hl]
+    sub $80
     ld [varSum], a
 
     ret
 
-checkTilePosition:
-    inc bc
+nextTilePosition:
+    ;inc WRAM address
+    ld a, [wramCell0]
+    add $01
+    ld [wramCell0], a
+    ld a, [wramCell1]
+    adc $00
+    ld [wramCell1], a
+
+    ;inc VRAM address
+    ld a, [vramCell0]
+    add $01
+    ld [vramCell0], a
+    ld a, [vramCell1]
+    adc $00
+    ld [vramCell1], a
 
     ld a, [currentCol]
     inc a
@@ -345,7 +370,7 @@ checkTilePosition:
     
     cp MAX_COLS
 
-    ret nz
+    jp nz, countTile
 
     ; reset col
     xor a
@@ -359,27 +384,40 @@ checkTilePosition:
 
     jr nz, .goToNextLine
 
-    call resetTilePosition
+    jp mainLoop
 
 .goToNextLine:
     ; reset col
     xor a
     ld [currentCol], a
-    ; change tile row
-    ld a, e
-    add $0C
-    ld e, a
-    ld a, d
+
+    ;inc VRAM address
+    ld a, [vramCell0]
+    add $02
+    ld [vramCell0], a
+    ld a, [vramCell1]
     adc $00
-    ld d, a
-    
-    ret
+    ld [vramCell1], a
+
+    jp countTile
 
 resetTilePosition:
     xor a
     ld [currentRow], a
     ld [currentCol], a
+    
     ld bc, vramCell
+    ld a, b
+    ld [vramCell1], a
+    ld a, c
+    ld [vramCell0], a
+
+    ld de, tilemapWram
+    ld a, d
+    ld [wramCell1], a
+    ld a, e
+    ld [wramCell0], a
+
     ret
 
 setStartingState:
