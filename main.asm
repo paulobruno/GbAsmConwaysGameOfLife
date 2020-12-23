@@ -106,12 +106,10 @@ countTile:
 
     ld a, [hl]
     sub $80
-    ld c, a
-    ld a, [varSum]
-    and c
+    and $01
 
     ; if [de] = 0 || count = 0, goto rule 2
-    jr z, .rule2
+    jr z, .cellIsDead
 
 ; else, goto rule 1
 ; check rule 1
@@ -126,22 +124,22 @@ countTile:
     cp 03
 
     jp z, survive
-    jr .rule3
+    jr .killCell
 
 ; check rule 2
 ; if cell is dead and there is 3 neighbors, create live cell
 ; if count = 0, goto 3
-.rule2:
+.cellIsDead:
     ld a, [varSum]
     cp $03
 
     ; if count != 0, goto rule 3
-    jr nz, .rule3
+    jr nz, .killCell
     ; else, create live cell
     jp survive
 
 ; check rule 3
-.rule3:
+.killCell:
     ld a, [wramCell1]
     ld h, a
     ld a, [wramCell0]
