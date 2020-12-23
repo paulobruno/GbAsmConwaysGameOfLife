@@ -77,22 +77,25 @@ Start:
     ld a, $38
     ld [rSCY], a
 
-mainLoop:
     call resetTilePosition
     call setStartingState
 
-    call moveResultToVram
+mainLoop:
     call turnOnLcd
     call waitVBlank
-    call turnOffLcd
 
+
+    call resetTilePosition
+    call turnOffLcd
+    call moveResultToVram
+    
     ld bc, $F0FF
 .delay
     ld a, b
     or c
     dec bc
     jr nz, .delay
-    
+        
 countTile:
     xor a
     ld [varSum], a
