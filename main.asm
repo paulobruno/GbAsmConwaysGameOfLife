@@ -84,15 +84,14 @@ mainLoop:
     call moveResultToVram
     call turnOnLcd
     call waitVBlank
+    call turnOffLcd
 
-    ld bc, $B0FF
+    ld bc, $F0FF
 .delay
     ld a, b
     or c
     dec bc
     jr nz, .delay
-
-    call turnOffLcd
     
 countTile:
     xor a
@@ -105,8 +104,11 @@ countTile:
     ld a, [vramCell0]
     ld l, a
 
+    ld a, [hl]
+    sub $80
+    ld c, a
     ld a, [varSum]
-    and [hl]
+    and c
 
     ; if [de] = 0 || count = 0, goto rule 2
     jr z, .rule2
