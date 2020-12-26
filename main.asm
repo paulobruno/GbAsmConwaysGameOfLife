@@ -55,22 +55,25 @@ SECTION "Main", ROM0
 
 Start:
     ; initialization
-    call waitVBlank
-    call turnOffLcd
     call setDefaultPalette
 
-    ld hl, $8800
+    call waitVBlank
+    call turnOffLcd
+
+    ld hl, $8000
     ld de, WhiteTileStart
     ld bc, WhiteTileEnd - WhiteTileStart
     call copyToMemory
     
-    ld hl, $8810
+    ld hl, $8010
     ld de, BlackTileStart
     ld bc, BlackTileEnd - BlackTileStart
     call copyToMemory
 
-    ld b, $80
+    ld b, $00
     call fillScreen
+
+    call turnOnLcd
 
     call clearOam
     
@@ -78,7 +81,6 @@ Start:
     ld [rSCX], a
     ld [rSCY], a
 
-    call turnOnLcd
     call setStartingState
 
 mainLoop:
@@ -472,15 +474,8 @@ moveResultToVram:
     ld [currentCol], a
 
 .movingToVram
-    ld h, d
-    ld l, e
-    ld a, [hl]
-    add $80
-    
-    ; ld hl, bc
-    ld h, b
-    ld l, c
-    ld [hl], a
+    ld a, [de]
+    ld [bc], a
     
     inc bc
     inc de
@@ -494,12 +489,10 @@ moveResultToVram:
 
     ; nextLine
     ; add bc, $0C
-    ld a, c
-    add $0C
-    ld c, a
-    ld a, b
-    adc $00
-    ld b, a
+    ld hl, $000C
+    add hl, bc
+    ld c, l
+    ld b, h
 
     ; add de, $02
     inc de
@@ -510,8 +503,8 @@ moveResultToVram:
 
     ld a, [currentRow]
     inc a
-    ld [currentRow], a    
-
+    ld [currentRow], a
+    ; check end row
     cp MAX_ROWS
     jr nz, .movingToVram
 
