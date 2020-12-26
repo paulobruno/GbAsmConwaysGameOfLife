@@ -25,19 +25,21 @@ rOBP1       EQU $FF49
 WRAM        EQU $C000
 
 ; variables
-varSum      EQU     $C000
-currentRow  EQU     $C001
-currentCol  EQU     $C002
-vramCell0   EQU     $C003
-vramCell1   EQU     $C004
-wramCell0   EQU     $C005
-wramCell1   EQU     $C006
-tilemapWram EQU     $C007
+varSum          EQU     $C000
+currentRow      EQU     $C001
+currentCol      EQU     $C002
+swapStates      EQU     $C003
+newCell0        EQU     $C004
+newCell1        EQU     $C005
+oldCell0        EQU     $C006
+oldCell1        EQU     $C007
+oldStateStart   EQU     $C01F
+newStateStart   EQU     $C1D7
 
-vramCell    EQU     $9821
+vramCell        EQU     $9821
 
-MAX_ROWS    EQU     $12
-MAX_COLS    EQU     $14
+MAX_ROWS        EQU     $12
+MAX_COLS        EQU     $14
 
 
 SECTION "Entry", ROM0[$100]
@@ -76,16 +78,15 @@ Start:
     ld [rSCX], a
     ld [rSCY], a
 
-    call resetTilePosition
+    call turnOnLcd
     call setStartingState
 
 mainLoop:
-    call turnOnLcd
     call waitVBlank
-
-    call resetTilePosition
     call turnOffLcd
     call moveResultToVram
+    call turnOnLcd
+    call resetTilePosition
     
 countTile:
     xor a
@@ -93,13 +94,12 @@ countTile:
     
     call countNeighbors
 
-    ld a, [vramCell1]
+    ld a, [newCell1]
     ld h, a
-    ld a, [vramCell0]
+    ld a, [newCell0]
     ld l, a
 
     ld a, [hl]
-    sub $80
     and $01
 
     ; if [de] = 0 || count = 0, goto rule 2
@@ -134,21 +134,21 @@ countTile:
 
 ; check rule 3
 .killCell:
-    ld a, [wramCell1]
+    ld a, [oldCell1]
     ld h, a
-    ld a, [wramCell0]
+    ld a, [oldCell0]
     ld l, a
     ld [hl], $00
     jp nextTilePosition
 
 survive:
-    ld a, [wramCell1]
+    ld a, [oldCell1]
     ld h, a
-    ld a, [wramCell0]
+    ld a, [oldCell0]
     ld l, a
     ld [hl], $01
     jp nextTilePosition
-        
+    
 
 SECTION "Sprites", ROM0
 
@@ -201,6 +201,15 @@ copyToMemory:
     jr nz, copyToMemory
     ret
 
+resetMemory:
+    xor a
+    ld [hli], a
+    dec bc
+    ld a, b
+    or c
+    jr nz, resetMemory
+    ret
+
 ; fill the screen with the tile at address in register b
 fillScreen:
     ld hl, vBGMap0
@@ -224,9 +233,9 @@ clearOam:
 
 
 countNeighbors:
-    ld a, [vramCell1]
+    ld a, [newCell1]
     ld h, a
-    ld a, [vramCell0]
+    ld a, [newCell0]
     ld l, a
 
     xor a
@@ -247,7 +256,7 @@ countNeighbors:
 
 ; de contains the address to the center tile
 countTopLeft:
-    ld a, $21
+    ld a, $17
     ld c, a
 
     call subDeBcToHl
@@ -255,7 +264,7 @@ countTopLeft:
     ret
 
 countTopCenter:
-    ld a, $20
+    ld a, $16
     ld c, a
 
     call subDeBcToHl
@@ -263,7 +272,7 @@ countTopCenter:
     ret
 
 countTopRight:
-    ld a, $1F
+    ld a, $15
     ld c, a
 
     call subDeBcToHl
@@ -287,7 +296,7 @@ countMiddleRight:
     ret
 
 countBottomLeft:
-    ld a, $1F
+    ld a, $15
     ld c, a
 
     call addDeAndBcToHl
@@ -295,7 +304,7 @@ countBottomLeft:
     ret
 
 countBottomCenter:
-    ld a, $20
+    ld a, $16
     ld c, a
 
     call addDeAndBcToHl
@@ -303,7 +312,7 @@ countBottomCenter:
     ret
 
 countBottomRight:
-    ld a, $21
+    ld a, $17
     ld c, a
 
     call addDeAndBcToHl
@@ -311,22 +320,22 @@ countBottomRight:
     ret
 
 addDeAndBcToHl:
-    ld a, [vramCell0]
+    ld a, [newCell0]
     add c
     ld l, a
 
-    ld a, [vramCell1]
+    ld a, [newCell1]
     adc $00
     ld h, a
 
     ret
 
 subDeBcToHl:
-    ld a, [vramCell0]
+    ld a, [newCell0]
     sub c
     ld l, a
 
-    ld a, [vramCell1]
+    ld a, [newCell1]
     sbc $00
     ld h, a
 
@@ -336,27 +345,26 @@ updateSumCounter:
     ; increment sum counter
     ld a, [varSum]
     add [hl]
-    sub $80
     ld [varSum], a
 
     ret
 
 nextTilePosition:
     ;inc WRAM address
-    ld a, [wramCell0]
+    ld a, [oldCell0]
     add $01
-    ld [wramCell0], a
-    ld a, [wramCell1]
+    ld [oldCell0], a
+    ld a, [oldCell1]
     adc $00
-    ld [wramCell1], a
+    ld [oldCell1], a
 
     ;inc VRAM address
-    ld a, [vramCell0]
+    ld a, [newCell0]
     add $01
-    ld [vramCell0], a
-    ld a, [vramCell1]
+    ld [newCell0], a
+    ld a, [newCell1]
     adc $00
-    ld [vramCell1], a
+    ld [newCell1], a
 
     ld a, [currentCol]
     inc a
@@ -385,13 +393,21 @@ nextTilePosition:
     xor a
     ld [currentCol], a
 
-    ;inc VRAM address
-    ld a, [vramCell0]
-    add $0C
-    ld [vramCell0], a
-    ld a, [vramCell1]
+    ; add newCell, 02
+    ld a, [newCell0]
+    add $02
+    ld [newCell0], a
+    ld a, [newCell1]
     adc $00
-    ld [vramCell1], a
+    ld [newCell1], a
+    
+    ; add oldCell, 02
+    ld a, [oldCell0]
+    add $02
+    ld [oldCell0], a
+    ld a, [oldCell1]
+    adc $00
+    ld [oldCell1], a
 
     jp countTile
 
@@ -400,29 +416,55 @@ resetTilePosition:
     ld [currentRow], a
     ld [currentCol], a
     
-    ld bc, vramCell
-    ld a, b
-    ld [vramCell1], a
-    ld a, c
-    ld [vramCell0], a
+    ld a, [swapStates]
+    cp $01
+    jr z, .swapStates
 
-    ld de, tilemapWram
+    ld bc, newStateStart
+    ld de, oldStateStart
+
+    ld a, $01
+    ld [swapStates], a
+    jr .updateStatePtrs
+
+.swapStates
+    ld bc, oldStateStart
+    ld de, newStateStart
+
+    xor a
+    ld [swapStates], a
+
+.updateStatePtrs
+    ld a, b
+    ld [newCell1], a
+    ld a, c
+    ld [newCell0], a
+
     ld a, d
-    ld [wramCell1], a
+    ld [oldCell1], a
     ld a, e
-    ld [wramCell0], a
+    ld [oldCell0], a
 
     ret
 
 setStartingState:
-    ld hl, tilemapWram
+    ; aqui
+    ld hl, newStateStart - $17
     ld de, initialStateStart
     ld bc, initialStateEnd - initialStateStart
     call copyToMemory
+
+    ld hl, oldStateStart - $17
+    ld bc, initialStateEnd - initialStateStart
+    call resetMemory
+
+    xor a
+    ld [swapStates], a
+
     ret
 
 moveResultToVram:
-    ld de, tilemapWram
+    ld de, newStateStart
     ld bc, vramCell
 
     xor a
@@ -451,13 +493,17 @@ moveResultToVram:
     jr nz, .movingToVram
 
     ; nextLine
-    ; add bc, $0E
+    ; add bc, $0C
     ld a, c
     add $0C
     ld c, a
     ld a, b
     adc $00
     ld b, a
+
+    ; add de, $02
+    inc de
+    inc de
 
     xor a
     ld [currentCol], a
@@ -473,22 +519,24 @@ moveResultToVram:
 
 
 initialStateStart:
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00
-    db $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00
-    db $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00
-    db $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00
-    db $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $01, $00, $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $01, $01, $01, $00, $00, $00, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 initialStateEnd:
