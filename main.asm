@@ -1,5 +1,6 @@
 INCLUDE "include/hardware.inc"
 INCLUDE "include/variables.inc"
+INCLUDE "include/sprites.inc"
 
 
 SECTION "Entry", ROM0[$100]
@@ -21,13 +22,13 @@ Start:
     call turnOffLcd
 
     ld hl, $8000
-    ld de, WhiteTileStart
-    ld bc, WhiteTileEnd - WhiteTileStart
+    ld de, whiteTileStart
+    ld bc, whiteTileSize
     call copyToMemory
     
     ld hl, $8010
-    ld de, BlackTileStart
-    ld bc, BlackTileEnd - BlackTileStart
+    ld de, blackTileStart
+    ld bc, blackTileSize
     call copyToMemory
 
     ld b, $00
@@ -396,11 +397,11 @@ setStartingState:
     ; aqui
     ld hl, newStateStart - $17
     ld de, initialStateStart
-    ld bc, initialStateEnd - initialStateStart
+    ld bc, initialStateSize
     call copyToMemory
 
     ld hl, oldStateStart - $17
-    ld bc, initialStateEnd - initialStateStart
+    ld bc, initialStateSize
     call resetMemory
 
     xor a
@@ -452,18 +453,3 @@ moveResultToVram:
     jr nz, .movingToVram
 
     ret
-
-
-SECTION "Sprites", ROM0
-
-initialStateStart:
-    INCBIN "images/pulsar3.2bpp"
-initialStateEnd:
-
-WhiteTileStart:
-    INCBIN "images/white.2bpp"
-WhiteTileEnd:
-
-BlackTileStart:
-    INCBIN "images/black.2bpp"
-BlackTileEnd:
