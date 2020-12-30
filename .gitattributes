@@ -1,0 +1,9 @@
+# End of file type
+* text eol=lf
+
+# Text files
+*.asm text
+
+# Binary files
+*.png binary
+*.2bpp binary
