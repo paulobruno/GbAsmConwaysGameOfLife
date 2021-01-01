@@ -61,13 +61,13 @@ countTile:
     ld a, [varSum]
     cp $02
 
-    jp z, survive
+    jr z, survive
 
 ; check rule 1 cell == 3
     ld a, [varSum]
     cp 03
 
-    jp z, survive
+    jr z, survive
     jr .killCell
 
 ; check rule 2
@@ -80,7 +80,7 @@ countTile:
     ; if count != 0, goto rule 3
     jr nz, .killCell
     ; else, create live cell
-    jp survive
+    jr survive
 
 ; check rule 3
 .killCell:
@@ -89,7 +89,7 @@ countTile:
     ld a, [oldCell0]
     ld l, a
     ld [hl], $00
-    jp nextTilePosition
+    jr nextTilePosition
 
 survive:
     ld a, [oldCell1]
@@ -97,8 +97,70 @@ survive:
     ld a, [oldCell0]
     ld l, a
     ld [hl], $01
-    jp nextTilePosition
+    jr nextTilePosition
 
+nextTilePosition:
+    ;inc WRAM address
+    ld a, [oldCell0]
+    add $01
+    ld [oldCell0], a
+    ld a, [oldCell1]
+    adc $00
+    ld [oldCell1], a
+
+    ;inc VRAM address
+    ld a, [newCell0]
+    add $01
+    ld [newCell0], a
+    ld a, [newCell1]
+    adc $00
+    ld [newCell1], a
+
+    ld a, [currentCol]
+    inc a
+    ld [currentCol], a
+    
+    cp MAX_COLS
+
+    jr nz, countTile
+
+    ; reset col
+    xor a
+    ld [currentCol], a
+    ; inc row
+    ld a, [currentRow]
+    inc a
+    ld [currentRow], a
+    ; check row
+    cp MAX_ROWS
+
+    jr nz, .goToNextLine
+
+    jp mainLoop
+
+.goToNextLine:
+    ; reset col
+    xor a
+    ld [currentCol], a
+
+    ; add newCell, 02
+    ld a, [newCell0]
+    add $02
+    ld [newCell0], a
+    ld a, [newCell1]
+    adc $00
+    ld [newCell1], a
+    
+    ; add oldCell, 02
+    ld a, [oldCell0]
+    add $02
+    ld [oldCell0], a
+    ld a, [oldCell1]
+    adc $00
+    ld [oldCell1], a
+
+    jp countTile
+    
 
 SECTION "Functions", ROM0
 
@@ -163,7 +225,6 @@ clearOam:
     cp $FF ; OAMRAM ends at $FF00
     jr nz, .clear
     ret
-
 
 countNeighbors:
     ld a, [newCell1]
@@ -282,67 +343,6 @@ updateSumCounter:
 
     ret
 
-nextTilePosition:
-    ;inc WRAM address
-    ld a, [oldCell0]
-    add $01
-    ld [oldCell0], a
-    ld a, [oldCell1]
-    adc $00
-    ld [oldCell1], a
-
-    ;inc VRAM address
-    ld a, [newCell0]
-    add $01
-    ld [newCell0], a
-    ld a, [newCell1]
-    adc $00
-    ld [newCell1], a
-
-    ld a, [currentCol]
-    inc a
-    ld [currentCol], a
-    
-    cp MAX_COLS
-
-    jp nz, countTile
-
-    ; reset col
-    xor a
-    ld [currentCol], a
-    ; inc row
-    ld a, [currentRow]
-    inc a
-    ld [currentRow], a
-    ; check row
-    cp MAX_ROWS
-
-    jr nz, .goToNextLine
-
-    jp mainLoop
-
-.goToNextLine:
-    ; reset col
-    xor a
-    ld [currentCol], a
-
-    ; add newCell, 02
-    ld a, [newCell0]
-    add $02
-    ld [newCell0], a
-    ld a, [newCell1]
-    adc $00
-    ld [newCell1], a
-    
-    ; add oldCell, 02
-    ld a, [oldCell0]
-    add $02
-    ld [oldCell0], a
-    ld a, [oldCell1]
-    adc $00
-    ld [oldCell1], a
-
-    jp countTile
 
 resetTilePosition:
     xor a
