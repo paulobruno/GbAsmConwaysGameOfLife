@@ -16,33 +16,33 @@ SECTION "Main", ROM0
 
 Start:
     ; initialization
-    call setDefaultPalette
+    call SetDefaultPalette
 
-    call waitVBlank
-    call turnOffLcd
+    call WaitVBlank
+    call TurnOffLcd
 
-    call loadTilesIntoVram
-    call clearScreen
+    call LoadTilesIntoVram
+    call ClearScreen
 
-    call turnOnLcd
+    call TurnOnLcd
 
-    call clearOam
-    call setScreenPosition
+    call ClearOam
+    call SetScreenPosition
 
-    call setStartingState
+    call SetStartingState
 
-mainLoop:
-    call waitVBlank
-    call turnOffLcd
-    call moveResultToVram
-    call turnOnLcd
-    call resetTilePosition
+MainLoop:
+    call WaitVBlank
+    call TurnOffLcd
+    call MoveResultToVram
+    call TurnOnLcd
+    call ResetTilePosition
     
-countTile:
+CountTile:
     xor a
     ld [varSum], a
     
-    call countNeighbors
+    call CountNeighbors
 
     ld a, [newCell1]
     ld h, a
@@ -61,13 +61,13 @@ countTile:
     ld a, [varSum]
     cp $02
 
-    jr z, survive
+    jr z, .survive
 
 ; check rule 1 cell == 3
     ld a, [varSum]
     cp 03
 
-    jr z, survive
+    jr z, .survive
     jr .killCell
 
 ; check rule 2
@@ -80,7 +80,7 @@ countTile:
     ; if count != 0, goto rule 3
     jr nz, .killCell
     ; else, create live cell
-    jr survive
+    jr .survive
 
 ; check rule 3
 .killCell:
@@ -89,17 +89,17 @@ countTile:
     ld a, [oldCell0]
     ld l, a
     ld [hl], $00
-    jr nextTilePosition
+    jr NextTilePosition
 
-survive:
+.survive:
     ld a, [oldCell1]
     ld h, a
     ld a, [oldCell0]
     ld l, a
     ld [hl], $01
-    jr nextTilePosition
+    jr NextTilePosition
 
-nextTilePosition:
+NextTilePosition:
     ;inc WRAM address
     ld a, [oldCell0]
     add $01
@@ -122,7 +122,7 @@ nextTilePosition:
     
     cp MAX_COLS
 
-    jr nz, countTile
+    jr nz, CountTile
 
     ; reset col
     xor a
@@ -136,7 +136,7 @@ nextTilePosition:
 
     jr nz, .goToNextLine
 
-    jp mainLoop
+    jp MainLoop
 
 .goToNextLine:
     ; reset col
@@ -159,54 +159,54 @@ nextTilePosition:
     adc $00
     ld [oldCell1], a
 
-    jp countTile
-    
+    jp CountTile
+
 
 SECTION "Functions", ROM0
 
-waitVBlank:
+WaitVBlank:
     ld a, [rLY]
     cp 144
-    jr c, waitVBlank
+    jr c, WaitVBlank
     ret
 
-turnOffLcd:
+TurnOffLcd:
     xor a ; ld a, 0
     ld [rLCDC], a
     ret
     
-turnOnLcd:
+TurnOnLcd:
     ld a, %10010001
     ld [rLCDC], a
     ret
 
-setDefaultPalette:
+SetDefaultPalette:
     ld a, %11100100
     ld [rBGP], a
     ld [rOBP0], a
     ret
 
-copyToMemory:
+CopyToMemory:
     ld a, [de]
     ld [hli], a ; ld [de], a ; inc de
     inc de
     dec bc
     ld a, b
     or c
-    jr nz, copyToMemory
+    jr nz, CopyToMemory
     ret
 
-resetMemory:
+ResetMemory:
     xor a
     ld [hli], a
     dec bc
     ld a, b
     or c
-    jr nz, resetMemory
+    jr nz, ResetMemory
     ret
 
 ; fill the screen with the tile at address in register b
-fillScreen:
+FillScreen:
     ld hl, vBGMap0
 .clear
     ld a, b
@@ -216,7 +216,7 @@ fillScreen:
     jr nz, .clear
     ret
 
-clearOam:
+ClearOam:
     ld hl, OAMRAM
 .clear
     xor a
@@ -226,7 +226,7 @@ clearOam:
     jr nz, .clear
     ret
 
-countNeighbors:
+CountNeighbors:
     ld a, [newCell1]
     ld h, a
     ld a, [newCell0]
@@ -235,85 +235,85 @@ countNeighbors:
     xor a
     ld b, a
 
-    call countTopLeft
-    call countTopCenter
-    call countTopRight
+    call CountTopLeft
+    call CountTopCenter
+    call CountTopRight
 
-    call countMiddleLeft
-    call countMiddleRight
+    call CountMiddleLeft
+    call CountMiddleRight
 
-    call countBottomLeft
-    call countBottomCenter
-    call countBottomRight
+    call CountBottomLeft
+    call CountBottomCenter
+    call CountBottomRight
 
     ret
 
 ; de contains the address to the center tile
-countTopLeft:
+CountTopLeft:
     ld a, $17
     ld c, a
 
-    call subDeBcToHl
-    call updateSumCounter
+    call SubDeBcToHl
+    call UpdateSumCounter
     ret
 
-countTopCenter:
+CountTopCenter:
     ld a, $16
     ld c, a
 
-    call subDeBcToHl
-    call updateSumCounter
+    call SubDeBcToHl
+    call UpdateSumCounter
     ret
 
-countTopRight:
+CountTopRight:
     ld a, $15
     ld c, a
 
-    call subDeBcToHl
-    call updateSumCounter
+    call SubDeBcToHl
+    call UpdateSumCounter
     ret
 
-countMiddleLeft:
+CountMiddleLeft:
     ld a, $01
     ld c, a
 
-    call subDeBcToHl
-    call updateSumCounter
+    call SubDeBcToHl
+    call UpdateSumCounter
     ret
 
-countMiddleRight:
+CountMiddleRight:
     ld a, $01
     ld c, a
 
-    call addDeAndBcToHl
-    call updateSumCounter
+    call AddDeAndBcToHl
+    call UpdateSumCounter
     ret
 
-countBottomLeft:
+CountBottomLeft:
     ld a, $15
     ld c, a
 
-    call addDeAndBcToHl
-    call updateSumCounter
+    call AddDeAndBcToHl
+    call UpdateSumCounter
     ret
 
-countBottomCenter:
+CountBottomCenter:
     ld a, $16
     ld c, a
 
-    call addDeAndBcToHl
-    call updateSumCounter
+    call AddDeAndBcToHl
+    call UpdateSumCounter
     ret
 
-countBottomRight:
+CountBottomRight:
     ld a, $17
     ld c, a
 
-    call addDeAndBcToHl
-    call updateSumCounter
+    call AddDeAndBcToHl
+    call UpdateSumCounter
     ret
 
-addDeAndBcToHl:
+AddDeAndBcToHl:
     ld a, [newCell0]
     add c
     ld l, a
@@ -324,7 +324,7 @@ addDeAndBcToHl:
 
     ret
 
-subDeBcToHl:
+SubDeBcToHl:
     ld a, [newCell0]
     sub c
     ld l, a
@@ -335,16 +335,14 @@ subDeBcToHl:
 
     ret
 
-updateSumCounter:
+UpdateSumCounter:
     ; increment sum counter
     ld a, [varSum]
     add [hl]
     ld [varSum], a
-
     ret
 
-
-resetTilePosition:
+ResetTilePosition:
     xor a
     ld [currentRow], a
     ld [currentCol], a
@@ -380,23 +378,23 @@ resetTilePosition:
 
     ret
 
-setStartingState:
+SetStartingState:
     ; aqui
     ld hl, newStateStart - $17
     ld de, initialStateStart
     ld bc, initialStateSize
-    call copyToMemory
+    call CopyToMemory
 
     ld hl, oldStateStart - $17
     ld bc, initialStateSize
-    call resetMemory
+    call ResetMemory
 
     xor a
     ld [swapStates], a
 
     ret
 
-moveResultToVram:
+MoveResultToVram:
     ld de, newStateStart
     ld bc, vramCell
 
@@ -441,25 +439,25 @@ moveResultToVram:
 
     ret
 
-loadTilesIntoVram:    
+LoadTilesIntoVram:  
     ld hl, $8000
     ld de, whiteTileStart
     ld bc, whiteTileSize
-    call copyToMemory
+    call CopyToMemory
     
     ld hl, $8010
     ld de, blackTileStart
     ld bc, blackTileSize
-    call copyToMemory
+    call CopyToMemory
 
     ret
 
-clearScreen:
+ClearScreen:
     ld b, $00
-    call fillScreen
+    call FillScreen
     ret
 
-setScreenPosition:
+SetScreenPosition:
     ld a, $08
     ld [rSCX], a
     ld [rSCY], a
