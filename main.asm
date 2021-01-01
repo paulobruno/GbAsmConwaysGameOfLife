@@ -347,7 +347,7 @@ ResetTilePosition:
     ld [currentRow], a
     ld [currentCol], a
     
-    ld a, [swapStates]
+    ld a, [isStateSwaped]
     cp $01
     jr z, .swapStates
 
@@ -355,7 +355,7 @@ ResetTilePosition:
     ld de, oldStateStart
 
     ld a, $01
-    ld [swapStates], a
+    ld [isStateSwaped], a
     jr .updateStatePtrs
 
 .swapStates
@@ -363,7 +363,7 @@ ResetTilePosition:
     ld de, newStateStart
 
     xor a
-    ld [swapStates], a
+    ld [isStateSwaped], a
 
 .updateStatePtrs
     ld a, b
@@ -390,7 +390,7 @@ SetStartingState:
     call ResetMemory
 
     xor a
-    ld [swapStates], a
+    ld [isStateSwaped], a
 
     ret
 

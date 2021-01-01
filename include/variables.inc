@@ -1,7 +1,7 @@
 varSum          EQU     $C000
 currentRow      EQU     $C001
 currentCol      EQU     $C002
-swapStates      EQU     $C003
+isStateSwaped   EQU     $C003
 newCell0        EQU     $C004
 newCell1        EQU     $C005
 oldCell0        EQU     $C006
