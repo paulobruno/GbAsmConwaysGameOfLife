@@ -21,15 +21,7 @@ Start:
     call waitVBlank
     call turnOffLcd
 
-    ld hl, $8000
-    ld de, whiteTileStart
-    ld bc, whiteTileSize
-    call copyToMemory
-    
-    ld hl, $8010
-    ld de, blackTileStart
-    ld bc, blackTileSize
-    call copyToMemory
+    call loadTilesIntoVram
 
     ld b, $00
     call fillScreen
@@ -451,5 +443,18 @@ moveResultToVram:
     ; check end row
     cp MAX_ROWS
     jr nz, .movingToVram
+
+    ret
+
+loadTilesIntoVram:    
+    ld hl, $8000
+    ld de, whiteTileStart
+    ld bc, whiteTileSize
+    call copyToMemory
+    
+    ld hl, $8010
+    ld de, blackTileStart
+    ld bc, blackTileSize
+    call copyToMemory
 
     ret
