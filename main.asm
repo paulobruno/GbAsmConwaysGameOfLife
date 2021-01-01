@@ -27,10 +27,7 @@ Start:
     call turnOnLcd
 
     call clearOam
-    
-    ld a, $08
-    ld [rSCX], a
-    ld [rSCY], a
+    call setScreenPosition
 
     call setStartingState
 
@@ -460,4 +457,10 @@ loadTilesIntoVram:
 clearScreen:
     ld b, $00
     call fillScreen
+    ret
+
+setScreenPosition:
+    ld a, $08
+    ld [rSCX], a
+    ld [rSCY], a
     ret
