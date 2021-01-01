@@ -22,9 +22,7 @@ Start:
     call turnOffLcd
 
     call loadTilesIntoVram
-
-    ld b, $00
-    call fillScreen
+    call clearScreen
 
     call turnOnLcd
 
@@ -457,4 +455,9 @@ loadTilesIntoVram:
     ld bc, blackTileSize
     call copyToMemory
 
+    ret
+
+clearScreen:
+    ld b, $00
+    call fillScreen
     ret
