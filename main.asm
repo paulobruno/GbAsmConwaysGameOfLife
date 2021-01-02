@@ -17,6 +17,7 @@ SECTION "Main", ROM0
 Start:
     ; initialization
     call SetDefaultPalette
+    call DisableSound
 
     call WaitVBlank
     call TurnOffLcd
@@ -184,6 +185,11 @@ SetDefaultPalette:
     ld a, %11100100
     ld [rBGP], a
     ld [rOBP0], a
+    ret
+
+DisableSound:
+    xor a
+    ld [rNR52], a
     ret
 
 CopyToMemory:

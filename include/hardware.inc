@@ -11,6 +11,8 @@ OAMRAM      EQU $FE00 ; $FE00 -> $FE9F
 ; Input register
 rINP        EQU $FF00
 
+rNR52       EQU $FF26
+
 ; LCDC register
 rLCDC       EQU $FF40
 
