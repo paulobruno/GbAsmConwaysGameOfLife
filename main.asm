@@ -74,7 +74,7 @@ CountTile:
 ; check rule 2
 ; if cell is dead and there is 3 neighbors, create live cell
 ; if count = 0, goto 3
-.cellIsDead:
+.cellIsDead
     ld a, [varSum]
     cp $03
 
@@ -84,7 +84,7 @@ CountTile:
     jr .survive
 
 ; check rule 3
-.killCell:
+.killCell
     ld a, [oldCell1]
     ld h, a
     ld a, [oldCell0]
@@ -92,7 +92,7 @@ CountTile:
     ld [hl], $00
     jr NextTilePosition
 
-.survive:
+.survive
     ld a, [oldCell1]
     ld h, a
     ld a, [oldCell0]
@@ -139,7 +139,7 @@ NextTilePosition:
 
     jp MainLoop
 
-.goToNextLine:
+.goToNextLine
     ; reset col
     xor a
     ld [currentCol], a
