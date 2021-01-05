@@ -3,7 +3,10 @@
 
 # Text files
 *.asm text
-include/*.inc text
+*.inc text
 
 # Binary files
-gfx/*.2bpp binary
+*.2bpp binary
+
+# Linguist rules
+*.inc linguist-language=Assembly
