@@ -3,7 +3,7 @@
 
 # Text files
 *.asm text
+include/*.inc text
 
 # Binary files
-*.png binary
-*.2bpp binary
+gfx/*.2bpp binary
