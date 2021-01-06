@@ -9,4 +9,9 @@
 *.2bpp binary
 
 # Linguist rules
+
+# Assembly codes
 *.inc linguist-language=Assembly
+
+# ignore 2bpp files statistics
+*.2bpp linguist-vendored
