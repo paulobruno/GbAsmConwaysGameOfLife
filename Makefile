@@ -7,7 +7,7 @@ BUILD	= build
 OBJDIR	= $(BUILD)/objs
 
 NAME	= main
-GAME	= $(NAME).gb
+ROM		= $(NAME).gb
 MAP		= $(NAME).map
 SYMBOL	= $(NAME).sym
 
@@ -20,17 +20,14 @@ SOURCES = $(wildcard *.asm)
 OBJECTS	= $(patsubst %.asm, $(OBJDIR)/%.o, $(SOURCES))
 
 
-all: build game_fix
+all: build $(ROM)
 
-game_fix: $(GAME)
-	$(FIXER) $(FFLAGS) $^
-
-$(GAME): $(OBJECTS)
+$(ROM): $(OBJECTS)
 	$(LINKER) $(LFLAGS) -o $@ $^
+	$(FIXER) $(FFLAGS) $@
 
 $(OBJECTS): $(OBJDIR)/%.o : %.asm
 	$(ASM) $(CFLAGS) -o $@ $<
-
 
 build:
 	mkdir -p $(OBJDIR)
