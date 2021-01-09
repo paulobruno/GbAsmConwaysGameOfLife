@@ -20,7 +20,6 @@ SOURCES = $(wildcard *.asm)
 OBJECTS	= $(patsubst %.asm, $(OBJDIR)/%.o, $(SOURCES))
 
 
-
 all: $(ROM)
 
 $(ROM): $(OBJECTS)
@@ -31,13 +30,13 @@ $(OBJECTS): $(OBJDIR)/%.o : %.asm | $(OBJDIR)
 	$(ASM) $(CFLAGS) -o $@ $<
 
 $(OBJDIR):
-	mkdir -p $(OBJDIR)
+	@mkdir -p $(OBJDIR)
 
 
 .PHONY: clean cleanall
 
 clean:
-	$(RM) $(BUILD) *.o *~
+	@$(RM) $(BUILD) *.o *~
 
 cleanall:
-	$(RM) $(EXEC) $(BUILD) *.o *~
+	@$(RM) $(EXEC) $(BUILD) *.o *~
