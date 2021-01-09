@@ -1,14 +1,18 @@
 ASM		= rgbasm
 LINKER	= rgblink
 FIXER	= rgbfix
+RM		= rm -rf
 
 BUILD	= build
 OBJDIR	= $(BUILD)/objs
+
 NAME	= main
-RM		= rm -rf
+GAME	= $(NAME).gb
+MAP		= $(NAME).map
+SYMBOL	= $(NAME).sym
 
 CFLAGS	= -E
-LFLAGS	= -m $(NAME).map -n $(NAME).sym
+LFLAGS	= -m $(MAP) -n $(SYMBOL)
 FFLAGS	= -v -p 0
 
 
@@ -18,11 +22,11 @@ OBJECTS	= $(patsubst %.asm, $(OBJDIR)/%.o, $(SOURCES))
 
 all: build game_fix
 
-game_fix: game
-	$(FIXER) $(FFLAGS) $(NAME).gb
+game_fix: $(GAME)
+	$(FIXER) $(FFLAGS) $^
 
-game: $(OBJECTS)
-	$(LINKER) $(LFLAGS) -o $(NAME).gb $^
+$(GAME): $(OBJECTS)
+	$(LINKER) $(LFLAGS) -o $@ $^
 
 $(OBJECTS): $(OBJDIR)/%.o : %.asm
 	$(ASM) $(CFLAGS) -o $@ $<
