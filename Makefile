@@ -20,16 +20,17 @@ SOURCES = $(wildcard *.asm)
 OBJECTS	= $(patsubst %.asm, $(OBJDIR)/%.o, $(SOURCES))
 
 
-all: build $(ROM)
+
+all: $(ROM)
 
 $(ROM): $(OBJECTS)
 	$(LINKER) $(LFLAGS) -o $@ $^
 	$(FIXER) $(FFLAGS) $@
 
-$(OBJECTS): $(OBJDIR)/%.o : %.asm
+$(OBJECTS): $(OBJDIR)/%.o : %.asm | $(OBJDIR)
 	$(ASM) $(CFLAGS) -o $@ $<
 
-build:
+$(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 
