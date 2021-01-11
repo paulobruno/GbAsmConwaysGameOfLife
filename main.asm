@@ -117,9 +117,9 @@ NextTilePosition:
     adc $00
     ld [newCell1], a
 
-    ld a, [currentCol]
-    inc a
-    ld [currentCol], a
+    ld hl, currentCol
+    inc [hl]
+    ld a, [hl]
     
     cp MAX_COLS
 
@@ -129,9 +129,9 @@ NextTilePosition:
     xor a
     ld [currentCol], a
     ; inc row
-    ld a, [currentRow]
-    inc a
-    ld [currentRow], a
+    ld hl, currentRow
+    inc [hl]
+    ld a, [hl]
     ; check row
     cp MAX_ROWS
 
@@ -415,9 +415,9 @@ MoveResultToVram:
     inc bc
     inc de
 
-    ld a, [currentCol]
-    inc a
-    ld [currentCol], a
+    ld hl, currentCol
+    inc [hl]
+    ld a, [hl]
     ; check end column
     cp MAX_COLS
     jr nz, .movingToVram
@@ -436,9 +436,9 @@ MoveResultToVram:
     xor a
     ld [currentCol], a
 
-    ld a, [currentRow]
-    inc a
-    ld [currentRow], a
+    ld hl, currentRow
+    inc [hl]
+    ld a, [hl]
     ; check end row
     cp MAX_ROWS
     jr nz, .movingToVram
