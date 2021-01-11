@@ -66,7 +66,7 @@ CountTile:
 
 ; check rule 1 cell == 3
     ld a, [varSum]
-    cp 03
+    cp $03
 
     jr z, .survive
     jr .killCell
@@ -354,22 +354,18 @@ ResetTilePosition:
     ld [currentCol], a
     
     ld a, [isStateSwaped]
-    cp $01
+    xor $01 ; inverts 0 and 1
+    ld [isStateSwaped], a
     jr z, .swapStates
 
     ld bc, newStateStart
     ld de, oldStateStart
 
-    ld a, $01
-    ld [isStateSwaped], a
     jr .updateStatePtrs
 
 .swapStates
     ld bc, oldStateStart
     ld de, newStateStart
-
-    xor a
-    ld [isStateSwaped], a
 
 .updateStatePtrs
     ld a, b
