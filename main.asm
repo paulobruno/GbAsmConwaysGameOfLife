@@ -404,6 +404,7 @@ MoveResultToVram:
     ld [currentRow], a
     ld [currentCol], a
 
+    ld hl, currentCol
 .movingToVram
     ld a, [de]
     ld [bc], a
@@ -411,7 +412,6 @@ MoveResultToVram:
     inc bc
     inc de
 
-    ld hl, currentCol
     inc [hl]
     ld a, [hl]
     ; check end column
@@ -435,6 +435,7 @@ MoveResultToVram:
     ld hl, currentRow
     inc [hl]
     ld a, [hl]
+    ld hl, currentCol
     ; check end row
     cp MAX_ROWS
     jr nz, .movingToVram
