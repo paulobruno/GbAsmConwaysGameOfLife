@@ -400,11 +400,12 @@ MoveResultToVram:
     ld de, newStateStart
     ld bc, vramCell
 
-    xor a
-    ld [currentRow], a
-    ld [currentCol], a
+    ld hl, currentRow
+    ld [hl], MAX_ROWS
 
     ld hl, currentCol
+    ld [hl], MAX_COLS
+
 .movingToVram
     ld a, [de]
     ld [bc], a
@@ -412,11 +413,12 @@ MoveResultToVram:
     inc bc
     inc de
 
-    inc [hl]
-    ld a, [hl]
-    ; check end column
-    cp MAX_COLS
+    ; assumes that hl = currentCol
+    dec [hl]
     jr nz, .movingToVram
+
+    ; ld [currentCol], MAX_COLS
+    ld [hl], MAX_COLS
 
     ; nextLine
     ; add bc, $0C
@@ -429,15 +431,9 @@ MoveResultToVram:
     inc de
     inc de
 
-    xor a
-    ld [currentCol], a
-
     ld hl, currentRow
-    inc [hl]
-    ld a, [hl]
+    dec [hl] 
     ld hl, currentCol
-    ; check end row
-    cp MAX_ROWS
     jr nz, .movingToVram
 
     ret
