@@ -211,15 +211,15 @@ ResetMemory:
     jr nz, ResetMemory
     ret
 
-; fill the screen with the tile at address in register b
-FillScreen:
-    ld hl, vBGMap0
-.clear
-    ld a, b
+; fill the screen with zeros
+ClearScreen:
+    xor a
+    ld hl, vBGMap0 ; screen starts at $9B00
+    ld c, $FF  ; screen ends at $9BFF
+.loop
     ld [hli], a
-    ld a, h
-    cp $9C ; screen ends at $9BFF
-    jr nz, .clear
+    dec c
+    jr nz, .loop
     ret
 
 ClearOam:
@@ -436,11 +436,6 @@ LoadTilesIntoVram:
     ld bc, blackTileSize
     call CopyToMemory
 
-    ret
-
-ClearScreen:
-    ld b, $00
-    call FillScreen
     ret
 
 SetScreenPosition:
