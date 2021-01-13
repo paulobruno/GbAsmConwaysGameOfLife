@@ -397,46 +397,33 @@ SetStartingState:
     ret
 
 MoveResultToVram:
-    ld de, newStateStart
-    ld bc, vramCell
-
-    ld hl, currentRow
-    ld [hl], MAX_ROWS
-
-    ld hl, currentCol
-    ld [hl], MAX_COLS
-
-.movingToVram
-    ld a, [de]
-    ld [bc], a
-    
-    inc bc
+    ld hl, newStateStart
+    ld de, vramCell
+    ld b, MAX_ROWS
+.loopRow
+    ld c, MAX_COLS
+.loopCol
+    ld a, [hli]
+    ld [de], a
     inc de
+    dec c
+    jr nz, .loopCol
 
-    ; assumes that hl = currentCol
-    dec [hl]
-    jr nz, .movingToVram
+    dec b
+    ret z
 
-    ; ld [currentCol], MAX_COLS
-    ld [hl], MAX_COLS
+    inc hl
+    inc hl
 
     ; nextLine
-    ; add bc, $0C
-    ld hl, $000C
-    add hl, bc
-    ld c, l
-    ld b, h
+    ; add de, $0C
+    ld a, e
+    add a, $000C
+    ld e, a
+    jr nc, .loopRow
 
-    ; add de, $02
-    inc de
-    inc de
-
-    ld hl, currentRow
-    dec [hl] 
-    ld hl, currentCol
-    jr nz, .movingToVram
-
-    ret
+    inc d
+    jr .loopRow
 
 LoadTilesIntoVram:  
     ld hl, $8000
