@@ -166,9 +166,9 @@ NextTilePosition:
 SECTION "Functions", ROM0
 
 WaitVBlank:
-    ld a, [rLY]
-    cp 144
-    jr c, WaitVBlank
+    ldh a, [rLY]
+    cp 145
+    jr nz, WaitVBlank
     ret
 
 TurnOffLcd:
