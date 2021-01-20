@@ -214,7 +214,7 @@ ResetMemory:
 ; fill the screen with zeros
 ClearScreen:
     xor a
-    ld hl, vBGMap0 ; screen starts at $9B00
+    ld hl, _SCRN0 ; screen starts at $9B00
     ld c, $FF  ; screen ends at $9BFF
 .loop
     ld [hli], a
@@ -223,7 +223,7 @@ ClearScreen:
     ret
 
 ClearOam:
-    ld hl, OAMRAM
+    ld hl, _OAMRAM
 .clear
     xor a
     ld [hli], a
