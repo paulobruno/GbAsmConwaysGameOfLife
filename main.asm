@@ -239,65 +239,49 @@ CountNeighbors:
 
 ; de contains the address to the center tile
 CountTopLeft:
-    ld a, $17
-    ld c, a
-
+    ld c, $17
     call SubDeBcToHl
     call UpdateSumCounter
     ret
 
 CountTopCenter:
-    ld a, $16
-    ld c, a
-
+    ld c, $16
     call SubDeBcToHl
     call UpdateSumCounter
     ret
 
 CountTopRight:
-    ld a, $15
-    ld c, a
-
+    ld c, $15
     call SubDeBcToHl
     call UpdateSumCounter
     ret
 
 CountMiddleLeft:
-    ld a, $01
-    ld c, a
-
+    ld c, $01
     call SubDeBcToHl
     call UpdateSumCounter
     ret
 
 CountMiddleRight:
-    ld a, $01
-    ld c, a
-
+    ld c, $01
     call AddDeAndBcToHl
     call UpdateSumCounter
     ret
 
 CountBottomLeft:
-    ld a, $15
-    ld c, a
-
+    ld c, $15
     call AddDeAndBcToHl
     call UpdateSumCounter
     ret
 
 CountBottomCenter:
-    ld a, $16
-    ld c, a
-
+    ld c, $16
     call AddDeAndBcToHl
     call UpdateSumCounter
     ret
 
 CountBottomRight:
-    ld a, $17
-    ld c, a
-
+    ld c, $17
     call AddDeAndBcToHl
     call UpdateSumCounter
     ret
