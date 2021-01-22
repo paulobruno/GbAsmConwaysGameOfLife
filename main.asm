@@ -36,25 +36,23 @@ MainLoop:
     call MoveResultToVram
     call TurnOnLcd
     call ResetTilePosition
-    
+
 CountTile:
     xor a
     ld [varSum], a
-    
+
     call CountNeighbors
 
-    ld a, [newCell1]
+    ld a, [newCellHigh]
     ld h, a
-    ld a, [newCell0]
+    ld a, [cellLow]
     ld l, a
 
     ld a, [hl]
     and $01
-    
-    ld a, [oldCell1]
+
+    ld a, [oldCellHigh]
     ld h, a
-    ld a, [oldCell0]
-    ld l, a
 
     ; if [de] = 0 || count = 0, goto rule 2
     jr z, .cellIsDead
@@ -84,7 +82,7 @@ CountTile:
 .cellIsDead
     ld a, [varSum]
     cp $03
-    
+
     ; if count != 0, goto rule 3
     jr nz, .killCell
     ; else, create live cell
@@ -95,23 +93,22 @@ CountTile:
 
 NextTilePosition:
     ;inc WRAM and VRAM addresses
-    ld a, [oldCell0]
+    ld a, [cellLow]
     add $01
-    ld [oldCell0], a
-    ld [newCell0], a
+    ld [cellLow], a
     jr nc, .nocarry
 
-    ld a, [oldCell1]
+    ld a, [oldCellHigh]
     inc a
-    ld [oldCell1], a
-    ld a, [newCell1]
+    ld [oldCellHigh], a
+    ld a, [newCellHigh]
     inc a
-    ld [newCell1], a
+    ld [newCellHigh], a
 .nocarry
     ld hl, currentCol
     inc [hl]
     ld a, [hl]
-    
+
     cp MAX_COLS
     jr nz, CountTile
 
@@ -133,21 +130,18 @@ NextTilePosition:
     xor a
     ld [currentCol], a
 
-    ; add newCell, 02
-    ld a, [newCell0]
+    ; add cell, 02
+    ld a, [cellLow]
     add $02
-    ld [newCell0], a
-    ld a, [newCell1]
-    adc $00
-    ld [newCell1], a
-    
-    ; add oldCell, 02
-    ld a, [oldCell0]
-    add $02
-    ld [oldCell0], a
-    ld a, [oldCell1]
-    adc $00
-    ld [oldCell1], a
+    ld [cellLow], a
+    jr nc, CountTile
+
+    ld a, [newCellHigh]
+    inc a
+    ld [newCellHigh], a
+    ld a, [oldCellHigh]
+    inc a
+    ld [oldCellHigh], a
 
     jp CountTile
 
@@ -164,7 +158,7 @@ TurnOffLcd:
     xor a ; ld a, 0
     ld [rLCDC], a
     ret
-    
+
 TurnOnLcd:
     ld a, %10010001
     ld [rLCDC], a
@@ -222,9 +216,9 @@ ClearOam:
     ret
 
 CountNeighbors:
-    ld a, [newCell1]
+    ld a, [newCellHigh]
     ld h, a
-    ld a, [newCell0]
+    ld a, [cellLow]
     ld l, a
 
     xor a
@@ -309,22 +303,22 @@ CountBottomRight:
     ret
 
 AddDeAndBcToHl:
-    ld a, [newCell0]
+    ld a, [cellLow]
     add c
     ld l, a
 
-    ld a, [newCell1]
+    ld a, [newCellHigh]
     adc $00
     ld h, a
 
     ret
 
 SubDeBcToHl:
-    ld a, [newCell0]
+    ld a, [cellLow]
     sub c
     ld l, a
 
-    ld a, [newCell1]
+    ld a, [newCellHigh]
     sbc $00
     ld h, a
 
@@ -341,7 +335,7 @@ ResetTilePosition:
     xor a
     ld [currentRow], a
     ld [currentCol], a
-    
+
     ld a, [isStateSwaped]
     xor $01 ; inverts 0 and 1
     ld [isStateSwaped], a
@@ -355,15 +349,11 @@ ResetTilePosition:
     ld de, newStateStart
 .updateStatePtrs
     ld a, b
-    ld [newCell1], a
-    ld a, c
-    ld [newCell0], a
-
+    ld [newCellHigh], a
     ld a, d
-    ld [oldCell1], a
-    ld a, e
-    ld [oldCell0], a
-
+    ld [oldCellHigh], a
+    ld a, c
+    ld [cellLow], a
     ret
 
 SetStartingState:
@@ -411,12 +401,12 @@ MoveResultToVram:
     inc d
     jr .loopRow
 
-LoadTilesIntoVram:  
+LoadTilesIntoVram:
     ld hl, $8000
     ld de, whiteTileStart
     ld bc, whiteTileSize
     call CopyToMemory
-    
+
     ld hl, $8010
     ld de, blackTileStart
     ld bc, blackTileSize

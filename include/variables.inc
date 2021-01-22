@@ -2,10 +2,9 @@ varSum          EQU     $C000
 currentRow      EQU     $C001
 currentCol      EQU     $C002
 isStateSwaped   EQU     $C003
-newCell0        EQU     $C004
-newCell1        EQU     $C005
-oldCell0        EQU     $C006
-oldCell1        EQU     $C007
+cellLow         EQU     $C004
+newCellHigh     EQU     $C005
+oldCellHigh     EQU     $C006
 oldStateStart   EQU     $C01F
 newStateStart   EQU     $C21F
 
