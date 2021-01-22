@@ -15,7 +15,6 @@ ENDR
 SECTION "Main", ROM0
 
 Start:
-    ; initialization
     call SetDefaultPalette
     call DisableSound
 
@@ -29,7 +28,6 @@ Start:
 
     call ClearOam
     call SetScreenPosition
-
     call SetStartingState
 
 MainLoop:
@@ -52,6 +50,11 @@ CountTile:
 
     ld a, [hl]
     and $01
+    
+    ld a, [oldCell1]
+    ld h, a
+    ld a, [oldCell0]
+    ld l, a
 
     ; if [de] = 0 || count = 0, goto rule 2
     jr z, .cellIsDead
@@ -69,7 +72,11 @@ CountTile:
     cp $03
 
     jr z, .survive
-    jr .killCell
+
+; check rule 3
+.killCell
+    ld [hl], $00
+    jr NextTilePosition
 
 ; check rule 2
 ; if cell is dead and there is 3 neighbors, create live cell
@@ -77,26 +84,12 @@ CountTile:
 .cellIsDead
     ld a, [varSum]
     cp $03
-
+    
     ; if count != 0, goto rule 3
     jr nz, .killCell
     ; else, create live cell
-    jr .survive
-
-; check rule 3
-.killCell
-    ld a, [oldCell1]
-    ld h, a
-    ld a, [oldCell0]
-    ld l, a
-    ld [hl], $00
-    jr NextTilePosition
 
 .survive
-    ld a, [oldCell1]
-    ld h, a
-    ld a, [oldCell0]
-    ld l, a
     ld [hl], $01
     jr NextTilePosition
 
@@ -224,12 +217,12 @@ ClearScreen:
 
 ClearOam:
     ld hl, _OAMRAM
-.clear
+.loop
     xor a
     ld [hli], a
     ld a, h
     cp $FF ; OAMRAM ends at $FF00
-    jr nz, .clear
+    jr nz, .loop
     ret
 
 CountNeighbors:
@@ -360,13 +353,10 @@ ResetTilePosition:
 
     ld bc, newStateStart
     ld de, oldStateStart
-
     jr .updateStatePtrs
-
 .swapStates
     ld bc, oldStateStart
     ld de, newStateStart
-
 .updateStatePtrs
     ld a, b
     ld [newCell1], a
