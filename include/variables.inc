@@ -7,7 +7,7 @@ newCell1        EQU     $C005
 oldCell0        EQU     $C006
 oldCell1        EQU     $C007
 oldStateStart   EQU     $C01F
-newStateStart   EQU     $C1D7
+newStateStart   EQU     $C21F
 
 vramCell        EQU     $9821
 

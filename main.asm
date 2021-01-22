@@ -94,28 +94,25 @@ CountTile:
     jr NextTilePosition
 
 NextTilePosition:
-    ;inc WRAM address
+    ;inc WRAM and VRAM addresses
     ld a, [oldCell0]
     add $01
     ld [oldCell0], a
-    ld a, [oldCell1]
-    adc $00
-    ld [oldCell1], a
-
-    ;inc VRAM address
-    ld a, [newCell0]
-    add $01
     ld [newCell0], a
-    ld a, [newCell1]
-    adc $00
-    ld [newCell1], a
+    jr nc, .nocarry
 
+    ld a, [oldCell1]
+    inc a
+    ld [oldCell1], a
+    ld a, [newCell1]
+    inc a
+    ld [newCell1], a
+.nocarry
     ld hl, currentCol
     inc [hl]
     ld a, [hl]
     
     cp MAX_COLS
-
     jr nz, CountTile
 
     ; reset col
@@ -129,7 +126,6 @@ NextTilePosition:
     cp MAX_ROWS
 
     jr nz, .goToNextLine
-
     jp MainLoop
 
 .goToNextLine
