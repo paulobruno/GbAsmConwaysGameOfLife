@@ -374,11 +374,11 @@ SetStartingState:
     ; aqui
     ld hl, newStateStart - $17
     ld de, initialStateStart
-    ld bc, initialStateSize
+    ld bc, stateSize
     call CopyToMemory
 
     ld hl, oldStateStart - $17
-    ld bc, initialStateSize
+    ld bc, stateSize
     call ResetMemory
 
     xor a

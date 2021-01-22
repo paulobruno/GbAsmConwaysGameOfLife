@@ -12,7 +12,7 @@ blackTileStart::
     INCBIN "gfx/black_tile.2bpp"
 
 
-initialStateSize EQU $01B8
+stateSize EQU $01B8
 
 initialStateStart::
     INCBIN "gfx/pulsar_3.2bpp"
