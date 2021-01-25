@@ -325,29 +325,31 @@ ResetTilePosition:
     ld [isStateSwaped], a
     jr z, .swapStates
 
-    ld bc, newStateStart
-    ld de, oldStateStart
+    ld b, newStateStart
+    ld c, oldStateStart
     jr .updateStatePtrs
 .swapStates
-    ld bc, oldStateStart
-    ld de, newStateStart
+    ld b, oldStateStart
+    ld c, newStateStart
 .updateStatePtrs
     ld a, b
     ld [newCellHigh], a
-    ld a, d
-    ld [oldCellHigh], a
     ld a, c
+    ld [oldCellHigh], a
+    ld a, stateStart
     ld [cellLow], a
     ret
 
 SetStartingState:
     ; aqui
-    ld hl, newStateStart - $17
+    ld h, newStateStart
+    ld l, stateStart - $17
     ld de, initialStateStart
     ld bc, stateSize
     call CopyToMemory
 
-    ld hl, oldStateStart - $17
+    ld h, oldStateStart
+    ld l, stateStart - $17
     ld bc, stateSize
     call ResetMemory
 
@@ -357,7 +359,8 @@ SetStartingState:
     ret
 
 MoveResultToVram:
-    ld hl, newStateStart
+    ld h, newStateStart
+    ld l, stateStart
     ld de, vramCell
     ld b, MAX_ROWS
 .loopRow
