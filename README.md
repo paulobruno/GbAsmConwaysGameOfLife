@@ -1,11 +1,14 @@
 # Conway's Game of Life - Game Boy Version
 
-This is a personal project I made to exercise the basic GBASM concepts I've been [studying](https://github.com/paulobruno/GbAsmTutorials).  
+This is a personal project I made to exercise the basic GB ASM concepts I've been [studying](https://github.com/paulobruno/GbAsmTutorials).  
 [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) is a very known cellular automaton and my friend [Arthur Walraven](https://github.com/ArthurWalraven) made me this nice suggestion as a challenge.  
 The current result is not ideal and I have several improvements on my TODO list.
 However, I'm not sure if I'll keep working on this or just jump directly to another project.
 
 *If you are interested in creating your own Game Boy games/projects, take a look at this really [awesome Game Boy development repo](https://github.com/gbdev/awesome-gbdev).*
+
+*I found an awesome implementation of GB Game of Life from [msklywenn](https://github.com/msklywenn/GB-GameOfLife).*
+*If somehow you liked mine, you have to take a look there.*
 
 ## Results
 
